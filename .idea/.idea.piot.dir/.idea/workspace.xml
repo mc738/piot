@@ -7,17 +7,16 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="47876d59-9a4f-4cb1-93ba-4fdd9ef6ae21" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.piot.dir/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.piot.dir/.idea/indexLayout.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.piot.dir/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.piot.dir/.idea/projectSettingsUpdater.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.piot.dir/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/common/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/logging/common.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/logging/logger.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/logging/mod.rs" afterDir="false" />
+    <list default="true" id="47876d59-9a4f-4cb1-93ba-4fdd9ef6ae21" name="Changes" comment="Initial commit">
+      <change afterPath="$PROJECT_DIR$/src/events/event_handler.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/events/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/orchestrating/action_handler.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/orchestrating/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/results/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/results/result_handler.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.piot.dir/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.piot.dir/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,6 +83,7 @@
   </component>
   <component name="RustProjectSettings">
     <option name="toolchainHomeDirectory" value="$PROJECT_DIR$/../../.cargo/bin" />
+    <option name="version" value="2" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -94,7 +94,23 @@
       <option name="presentableId" value="Default" />
       <updated>1656236067278</updated>
       <workItem from="1656236077405" duration="16314000" />
+      <workItem from="1656360497870" duration="5862000" />
     </task>
+    <task id="LOCAL-00001" summary="Initial commit">
+      <created>1656360510951</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1656360510951</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Initial commit">
+      <created>1656361459263</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1656361459263</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -116,6 +132,9 @@
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+    <MESSAGE value="In" />
+    <MESSAGE value="Initial commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="Initial commit" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
