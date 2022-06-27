@@ -5,6 +5,7 @@ use std::sync::{Arc, mpsc, Mutex};
 use std::thread;
 use std::thread::JoinHandle;
 use crate::{Action, ActionResult, ActionType, Command, CommandType, Log, Logger};
+use crate::common::RunAction;
 use crate::orchestrating::action_handler::handle_action;
 
 type Job = Box<dyn FnOnce() -> ActionResult + Send + 'static>;
@@ -43,6 +44,9 @@ impl Orchestrator {
                 match command.command_type {
                     CommandType::Test => {
                         Action { id: command.id, action_type: ActionType::Test }
+                    }
+                    CommandType::Run(run_command) => {
+                        Action { id: command.id, action_type: ActionType::Run(RunAction { message: run_command.message }) }
                     }
                 };
 

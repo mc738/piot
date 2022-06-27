@@ -4,7 +4,7 @@ use std::time::Duration;
 use uuid::Uuid;
 use crate::logging::logger;
 use crate::logging::logger::Log;
-use crate::common::{ActionResult, Action, ActionType, Operation, Command, CommandType, Event, EventType};
+use crate::common::{ActionResult, Action, ActionType, Operation, Command, CommandType, Event, EventType, RunCommand};
 use crate::events::EventLoop;
 use crate::logger::Logger;
 use crate::orchestrating::Orchestrator;
@@ -15,6 +15,7 @@ mod common;
 mod orchestrating;
 mod events;
 mod results;
+mod http;
 
 struct Node {
     log: Log,
@@ -74,6 +75,10 @@ fn main() {
         
         node.raise_event(event);
         
-        thread::sleep(Duration::from_secs(1))
+        thread::sleep(Duration::from_secs(2));
+        
+        let run_command = Command { id: Uuid::new_v4(), command_type: CommandType::Run(RunCommand { message: "Test run".to_string() }) };
+        
+        node.queue_command(run_command);
     }
 }

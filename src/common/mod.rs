@@ -12,7 +12,13 @@ pub struct Event {
 }
 
 pub enum EventType {
-    Test
+    Test,
+    RunResult(RunResultEvent),
+}
+
+pub struct  RunResultEvent {
+    pub(crate) successful: bool,
+    pub(crate) message: String,
 }
 
 pub struct Command {
@@ -21,7 +27,12 @@ pub struct Command {
 }
 
 pub enum CommandType {
-    Test
+    Test,
+    Run(RunCommand)
+}
+
+pub struct RunCommand {
+    pub(crate) message: String
 }
 
 pub struct Action {
@@ -30,7 +41,12 @@ pub struct Action {
 }
 
 pub enum ActionType {
-    Test
+    Test,
+    Run(RunAction)
+}
+
+pub struct RunAction {
+    pub(crate) message: String
 }
 
 pub struct ActionResult {
@@ -41,5 +57,6 @@ pub struct ActionResult {
 }
 
 pub enum Operation {
-    Test
+    Test,
+    RaiseEvent(Event),
 }

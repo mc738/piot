@@ -1,4 +1,4 @@
-﻿use crate::{ActionResult, Logger};
+﻿use crate::{ActionResult, Logger, Operation};
 use crate::common::Event;
 
 pub fn handle_result(result: ActionResult, logger: &Logger) -> Vec<Event> {
@@ -7,5 +7,16 @@ pub fn handle_result(result: ActionResult, logger: &Logger) -> Vec<Event> {
         false => logger.log_error(format!("Action {} failed. Message - {}", result.id, result.message)).unwrap(),
     };
     
-    vec![]
+    let mut events: Vec<Event> = Vec::new();
+    
+    for op in result.ops {
+        match op {
+            Operation::Test => {}
+            Operation::RaiseEvent(event) => {
+                events.push(event);
+            }
+        }
+    }
+    
+    events
 }
