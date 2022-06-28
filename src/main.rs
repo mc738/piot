@@ -1,4 +1,5 @@
-use std::sync::mpsc::channel;
+use std::collections::HashMap;
+use std::sync::mpsc::{channel, Sender};
 use std::thread;
 use std::time::Duration;
 use uuid::Uuid;
@@ -6,6 +7,9 @@ use crate::logging::logger;
 use crate::logging::logger::Log;
 use crate::common::{ActionResult, Action, ActionType, Operation, Command, CommandType, Event, EventType, RunCommand};
 use crate::events::EventLoop;
+use crate::http::client::HttpClient;
+use crate::http::common::HttpResponse;
+use crate::http::server::HttpServer;
 use crate::logger::Logger;
 use crate::orchestrating::Orchestrator;
 use crate::results::ResultHandler;
@@ -21,7 +25,8 @@ struct Node {
     log: Log,
     event_loop: EventLoop,
     orchestrator: Orchestrator,
-    result_handler: ResultHandler
+    result_handler: ResultHandler,
+    http_server: HttpServer,
 }
 
 impl Node {
@@ -34,15 +39,18 @@ impl Node {
 
         let event_loop = EventLoop::start(command_sender.clone(), event_receiver, event_sender.clone(), &log);
 
-        let orchestrator = Orchestrator::start(result_sender, command_receiver, command_sender, &log);
+        let orchestrator = Orchestrator::start(result_sender, command_receiver, command_sender.clone(), &log);
 
-        let result_handler = ResultHandler::start(event_sender,  result_receiver, &log);
+        let result_handler = ResultHandler::start(event_sender.clone(),  result_receiver, &log);
+        
+        let http_server = HttpServer::create("0.0.0.0:61409".to_string(), event_sender, command_sender, &log).unwrap();
 
         Node {
             log,
             event_loop,
             orchestrator,
-            result_handler
+            result_handler,
+            http_server
         }
     }
     
@@ -67,8 +75,36 @@ fn do_something(action: Action) -> ActionResult {
 
 fn main() {
     
-    let node = Node::start();
+    match HttpClient::connect("192.168.0.226:80".to_string()) {
+        Ok(mut client) => {
+            match client.get("/".to_string(), "text/plain".to_string(), HashMap::new()){
+                Ok(response) => {
+                    println!("Header\n\r{}", response.header.get_string());
+                    match response.body {
+                        None => {}
+                        Some(raw) => {
+                            println!("Body\n\r{}", String::from_utf8(raw).unwrap())
+                        }
+                    }
+                    
+                }
+                Err(e) => {
+                    println!("{}", e)
+                }
+            };
+        }
+        Err(_) => {}
+    };
     
+    let node = Node::start();
+
+
+
+    loop {
+        
+    }
+    
+    /*
     loop {
        
         let event = Event { id: Uuid::new_v4(), event_type: EventType::Test };
@@ -81,4 +117,5 @@ fn main() {
         
         node.queue_command(run_command);
     }
+    */
 }

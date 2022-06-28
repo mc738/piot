@@ -76,7 +76,7 @@ impl WorkerPool {
         let receiver = Arc::new(Mutex::new(receiver));
 
         for id in 0..size {
-            let name = format!("worker-{}", id);
+            let name = format!("worker_{}", id);
 
             let worker_logger = log.get_logger(name);
 

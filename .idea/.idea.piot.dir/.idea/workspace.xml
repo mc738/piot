@@ -7,15 +7,14 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="47876d59-9a4f-4cb1-93ba-4fdd9ef6ae21" name="Changes" comment="Refactored and added event loop.">
-      <change afterPath="$PROJECT_DIR$/src/http/mod.rs" afterDir="false" />
+    <list default="true" id="47876d59-9a4f-4cb1-93ba-4fdd9ef6ae21" name="Changes" comment="Added test event type">
+      <change afterPath="$PROJECT_DIR$/src/http/client.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/http/common.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/http/server.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.piot.dir/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.piot.dir/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/events/event_handler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/events/event_handler.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/http/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/http/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/orchestrating/action_handler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/orchestrating/action_handler.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/orchestrating/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/orchestrating/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/results/result_handler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/results/result_handler.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -93,7 +92,7 @@
       <option name="presentableId" value="Default" />
       <updated>1656236067278</updated>
       <workItem from="1656236077405" duration="16314000" />
-      <workItem from="1656360497870" duration="8767000" />
+      <workItem from="1656360497870" duration="24936000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <created>1656360510951</created>
@@ -116,7 +115,14 @@
       <option name="project" value="LOCAL" />
       <updated>1656368227577</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Added test event type">
+      <created>1656371175095</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1656371175095</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -141,7 +147,8 @@
     <MESSAGE value="In" />
     <MESSAGE value="Initial commit" />
     <MESSAGE value="Refactored and added event loop." />
-    <option name="LAST_COMMIT_MESSAGE" value="Refactored and added event loop." />
+    <MESSAGE value="Added test event type" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added test event type" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
