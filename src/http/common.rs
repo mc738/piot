@@ -27,7 +27,7 @@ pub enum HttpStatus {
 
 pub struct HttpRequest {
     pub header: HttpRequestHeader,
-    body: Option<Vec<u8>>,
+    pub body: Option<Vec<u8>>,
 }
 
 pub struct HttpRequestHeader {

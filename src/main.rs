@@ -20,8 +20,78 @@ mod orchestrating;
 mod events;
 mod results;
 mod http;
+mod io;
 
-struct Node {
+
+/*
+fn test() {
+    let mut client = HttpClient::create("192.168.0.226:80".to_string());
+    let request1 = r#"
+    {
+        "newState": 1
+    }
+    "#;
+    
+    let request2 = r#"
+    {
+        "newState": 2
+    }
+    "#;
+
+    let request1_parsed: UpdateNodeStateRequest = serde_json::from_str(request1).unwrap();
+    let request2_parsed: UpdateNodeStateRequest = serde_json::from_str(request2).unwrap();
+    
+    let response1 = client.get(format!("/set-state/{}", request1_parsed.new_state), "text/plain".to_string(), HashMap::new()).unwrap();
+    
+    match response1.body {
+        None => {}
+        Some(body) => {
+            let result: UpdateNodeStateResponse = serde_json::from_slice(&body).unwrap();
+            println!("Result: {} - Old state: {} New state: {}", result.result, result.old_state, result.new_state)
+        }
+    }
+    
+    thread::sleep(Duration::from_secs(1));
+
+    let  response1_again = client.get(format!("/set-state/{}", request1_parsed.new_state), "text/plain".to_string(), HashMap::new()).unwrap();
+    
+    match response1_again.body {
+        None => {}
+        Some(body) => {
+            let result: UpdateNodeStateResponse = serde_json::from_slice(&body).unwrap();
+            println!("Result: {} - Old state: {} New state: {}", result.result, result.old_state, result.new_state)
+        }
+    }
+
+    thread::sleep(Duration::from_secs(1));
+
+    let response2 = client.get(format!("/set-state/{}", request2_parsed.new_state), "text/plain".to_string(), HashMap::new()).unwrap();
+
+    match response2.body {
+        None => {}
+        Some(body) => {
+            let result: UpdateNodeStateResponse = serde_json::from_slice(&body).unwrap();
+            println!("Result: {} - Old state: {} New state: {}", result.result, result.old_state, result.new_state)
+        }
+    }
+
+    thread::sleep(Duration::from_secs(1));
+
+    let response3 = client.get("/get-state".to_string(), "text/plain".to_string(), HashMap::new()).unwrap();
+
+    match response3.body {
+        None => {}
+        Some(body) => {
+            let result: GetNodeStateResponse = serde_json::from_slice(&body).unwrap();
+            println!("Current state: {}", result.state)
+        }
+    }
+
+    thread::sleep(Duration::from_secs(1));
+}
+*/
+
+struct Controller {
     log: Log,
     event_loop: EventLoop,
     orchestrator: Orchestrator,
@@ -29,8 +99,8 @@ struct Node {
     http_server: HttpServer,
 }
 
-impl Node {
-    pub fn start() -> Node {
+impl Controller {
+    pub fn start() -> Controller {
         let log = Log::start().unwrap();
 
         let (event_sender, event_receiver) = channel::<Event>();
@@ -45,7 +115,7 @@ impl Node {
         
         let http_server = HttpServer::create("0.0.0.0:61409".to_string(), event_sender, command_sender, &log).unwrap();
 
-        Node {
+        Controller {
             log,
             event_loop,
             orchestrator,
@@ -63,18 +133,12 @@ impl Node {
     }
 }
 
-fn do_something(action: Action) -> ActionResult {
-    let ops = vec![ Operation::Test ];
-    
-    ActionResult { id: action.id, successful: true, message: "Hello, World!".to_string(), ops }
-}
-
-
-
-
 
 fn main() {
     
+    //test();
+    
+    /*
     match HttpClient::connect("192.168.0.226:80".to_string()) {
         Ok(mut client) => {
             match client.get("/".to_string(), "text/plain".to_string(), HashMap::new()){
@@ -95,8 +159,9 @@ fn main() {
         }
         Err(_) => {}
     };
+    */
     
-    let node = Node::start();
+    let controller = Controller::start();
 
 
 
