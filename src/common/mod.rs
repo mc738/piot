@@ -14,12 +14,19 @@ pub struct Event {
 pub enum EventType {
     Test,
     RunResult(RunResultEvent),
+    NodeStateChange(NodeStateChangeEvent),
 }
 
-pub struct  RunResultEvent {
+pub struct RunResultEvent {
     pub(crate) successful: bool,
     pub(crate) message: String,
 }
+
+pub struct NodeStateChangeEvent {
+    pub node: String,
+    pub old_state: u8,
+    pub new_state: u8,
+} 
 
 pub struct Command {
     pub(crate) id: Uuid,
@@ -28,11 +35,17 @@ pub struct Command {
 
 pub enum CommandType {
     Test,
-    Run(RunCommand)
+    Run(RunCommand),
+    ChangeNodeState(ChangeNodeStateCommand)
 }
 
 pub struct RunCommand {
     pub(crate) message: String
+}
+
+pub struct ChangeNodeStateCommand {
+    pub node: String,
+    pub(crate) new_state: u8
 }
 
 pub struct Action {
@@ -42,11 +55,17 @@ pub struct Action {
 
 pub enum ActionType {
     Test,
-    Run(RunAction)
+    Run(RunAction),
+    ChangeNodeState(ChangeNodeStateAction)
 }
 
 pub struct RunAction {
     pub(crate) message: String
+}
+
+pub struct ChangeNodeStateAction {
+    pub node: String,
+    pub(crate) new_state: u8
 }
 
 pub struct ActionResult {

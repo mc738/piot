@@ -4,6 +4,7 @@ use std::net::TcpStream;
 use std::num::ParseIntError;
 use crate::Logger;
 
+#[derive(Clone, Copy)]
 pub enum HttpVerb {
     GET,
     HEAD,

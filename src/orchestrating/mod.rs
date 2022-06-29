@@ -4,8 +4,8 @@ use std::sync::mpsc::{channel, Sender, Receiver};
 use std::sync::{Arc, mpsc, Mutex};
 use std::thread;
 use std::thread::JoinHandle;
-use crate::{Action, ActionResult, ActionType, Command, CommandType, Log, Logger};
-use crate::common::RunAction;
+use crate::{Action, ActionResult, ActionType, Command, CommandType, Log, Logger, ResolverMessage};
+use crate::common::{ChangeNodeStateAction, RunAction};
 use crate::orchestrating::action_handler::handle_action;
 
 type Job = Box<dyn FnOnce() -> ActionResult + Send + 'static>;
@@ -27,7 +27,7 @@ struct Worker {
 }
 
 impl Orchestrator {
-    pub fn start(result_sender: Sender<ActionResult>, command_receiver: Receiver<Command>, command_sender: Sender<Command>, log: &Log) -> Orchestrator {
+    pub fn start(result_sender: Sender<ActionResult>, command_receiver: Receiver<Command>, command_sender: Sender<Command>, nr_sender: Sender<ResolverMessage>, log: &Log) -> Orchestrator {
         //let (tx, rx) = channel::<Command>();
         let logger = log.get_logger("orchestrator".to_string());
 
@@ -48,11 +48,15 @@ impl Orchestrator {
                     CommandType::Run(run_command) => {
                         Action { id: command.id, action_type: ActionType::Run(RunAction { message: run_command.message }) }
                     }
+                    CommandType::ChangeNodeState(new_state) => {
+                        Action { id: command.id, action_type: ActionType::ChangeNodeState(ChangeNodeStateAction { node: new_state.node, new_state: new_state.new_state }) }
+                    }
                 };
 
-            let action_logger = logger.create_from(format!("action-{}", action.id));
+            let action_logger = logger.create_from(format!("action_{}", action.id));
 
-            workers.execute(|| handle_action(action, action_logger));
+            let name_resolver = nr_sender.clone();
+            workers.execute(|| handle_action(action, name_resolver, action_logger));
         });
 
         Orchestrator { sender: command_sender, thread }

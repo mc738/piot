@@ -7,16 +7,17 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="47876d59-9a4f-4cb1-93ba-4fdd9ef6ae21" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/io/mod.rs" afterDir="false" />
+    <list default="true" id="47876d59-9a4f-4cb1-93ba-4fdd9ef6ae21" name="Changes" comment="IO wip">
+      <change afterPath="$PROJECT_DIR$/src/io/network.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.piot.dir/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.piot.dir/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/common/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/http/client.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/http/client.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/events/event_handler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/events/event_handler.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/http/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/http/common.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/http/server.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/http/server.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/io/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/io/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orchestrating/action_handler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/orchestrating/action_handler.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orchestrating/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/orchestrating/mod.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,7 +96,7 @@
       <updated>1656236067278</updated>
       <workItem from="1656236077405" duration="16314000" />
       <workItem from="1656360497870" duration="25277000" />
-      <workItem from="1656522803209" duration="7910000" />
+      <workItem from="1656522803209" duration="21123000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <created>1656360510951</created>
@@ -132,7 +133,14 @@
       <option name="project" value="LOCAL" />
       <updated>1656458783839</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="IO wip">
+      <created>1656532437295</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1656532437295</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -159,7 +167,8 @@
     <MESSAGE value="Refactored and added event loop." />
     <MESSAGE value="Added test event type" />
     <MESSAGE value="Added http server and client" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added http server and client" />
+    <MESSAGE value="IO wip" />
+    <option name="LAST_COMMIT_MESSAGE" value="IO wip" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

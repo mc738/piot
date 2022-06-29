@@ -20,5 +20,9 @@ pub fn handle_event(event: Event, logger: &Logger) -> Vec<Command> {
                 }
             }
         }
+        EventType::NodeStateChange(event_data) => {
+            logger.log_info(format!("Node state change - Node {} Old state {} New state {}", "", event_data.old_state, event_data.new_state)).unwrap();
+            vec! []
+        }
     }
 }

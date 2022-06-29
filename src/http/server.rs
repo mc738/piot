@@ -3,16 +3,18 @@ use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 use std::process::id;
 use std::sync::{Arc, mpsc, Mutex};
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{channel, Sender};
 use std::thread;
 use std::thread::JoinHandle;
 use std::time::Duration;
 use uuid::Uuid;
-use crate::{Command, Event, EventType, HttpClient, HttpResponse, Log, Logger};
-use crate::http::common::{HttpRequest, HttpStatus, HttpVerb};
+use crate::{Command, CommandType, Event, EventType, HttpClient, HttpResponse, Log, Logger, ResolverMessage};
+use crate::http::common::{HttpRequest, HttpResponseHeader, HttpStatus, HttpVerb};
 use crate::io::{UpdateNodeStateRequest, UpdateNodeStateResponse, GetNodeStateResponse};
 
 use std::str::from_utf8;
+use crate::common::ChangeNodeStateCommand;
+use crate::io::network::NameRequest;
 
 pub(crate) struct HttpServer {
     thread: JoinHandle<()>,
@@ -39,10 +41,23 @@ struct ConnectionContext {
     command_sender: Sender<Command>,
     stream: TcpStream,
     logger: Logger,
+    name_resolver: Sender<ResolverMessage>,
+}
+
+struct RouteResult {
+    response: HttpResponse,
+    events: Vec<Event>,
+    commands: Vec<Command>
+}
+
+type Route = Box<dyn FnOnce(HttpRequest) -> RouteResult + Send + 'static>;
+
+struct Routes {
+    routes: HashMap<(String, HttpVerb), Route>
 }
 
 impl HttpServer {
-    pub fn create(address: String, event_sender: Sender<Event>, command_sender: Sender<Command>, log: &Log) -> Result<HttpServer, &'static str> {
+    pub fn create(address: String, event_sender: Sender<Event>, command_sender: Sender<Command>, name_resolver: Sender<ResolverMessage>, log: &Log) -> Result<HttpServer, &'static str> {
         let logger = log.get_logger("http_server".to_string());
         let connection_pool = ConnectionPool::new(4, log);
         match TcpListener::bind(address) {
@@ -53,7 +68,7 @@ impl HttpServer {
                             Ok(stream) => {
                                 let remote = stream.peer_addr().unwrap();
                                 logger.log_info(format!("Request received from {}", remote)).unwrap();
-                                let context = ConnectionContext::create(String::from(remote.ip().to_string()), event_sender.clone(), command_sender.clone(), stream, &logger);
+                                let context = ConnectionContext::create(String::from(remote.ip().to_string()), event_sender.clone(), command_sender.clone(), stream, name_resolver.clone(), &logger);
 
                                 let es = event_sender.clone();
                                 let cs = command_sender.clone();
@@ -123,7 +138,7 @@ impl ConnectionHandler {
 }
 
 impl ConnectionContext {
-    fn create(from: String, event_sender: Sender<Event>, command_sender: Sender<Command>, stream: TcpStream, logger: &Logger) -> ConnectionContext {
+    fn create(from: String, event_sender: Sender<Event>, command_sender: Sender<Command>, stream: TcpStream, name_resolver: Sender<ResolverMessage>, logger: &Logger) -> ConnectionContext {
         let id = Uuid::new_v4();
         let slug = String::from(Uuid::new_v4().to_string().split_at(6).0);
         let connection_logger = logger.create_from(slug.clone());
@@ -135,6 +150,7 @@ impl ConnectionContext {
             event_sender,
             command_sender,
             stream,
+            name_resolver,
             logger: connection_logger,
         }
     }
@@ -165,8 +181,8 @@ fn handle_connect(mut context: ConnectionContext) {
         Ok(request) => {
             context.logger.log_info(format!("Request for route {}. Type: {}", request.header.route, request.header.verb.get_str())).unwrap();
 
-            let (response, event) = router(request);
-            match context.send_response(response) {
+            let result = router(request, context.name_resolver.clone());
+            match context.send_response(result.response) {
                 Ok(_) => {
                     context.logger.log_success("Response sent.".to_string()).unwrap();
                 }
@@ -175,12 +191,14 @@ fn handle_connect(mut context: ConnectionContext) {
                 }
             }
             
-            match event {
-                None => {}
-                Some(event) => {
-                    context.logger.log_success(format!("Rising event - id: {}", event.id)).unwrap();
-                    context.event_sender.send(event).unwrap();
-                }
+            for event in result.events {
+                context.logger.log_info(format!("Rising event - id: {}", event.id)).unwrap();
+                context.event_sender.send(event).unwrap();
+            }
+            
+            for command in result.commands {
+                context.logger.log_info(format!("Queuing command - id: {}", command.id)).unwrap();
+                context.command_sender.send(command).unwrap();
             }
         }
         Err(message) => {
@@ -189,88 +207,124 @@ fn handle_connect(mut context: ConnectionContext) {
     }
 }
 
-struct UpdateStateRequest {
-    new_state: i8
+/*
+impl Routes {
+    pub fn create() -> Routes {
+        let mut map = HashMap::new();
+        
+        map.insert(("/set-state".to_string(), HttpVerb::GET), Box::new(set_state_route));
+        
+        Routes {
+            routes: map
+        }
+    }
+}
+*/
+
+fn router(request: HttpRequest, name_resolver: Sender<ResolverMessage>) -> RouteResult {
+    //let client = HttpClient::create("192.168.0.226:80".to_string());
+    
+    match (request.header.route.as_str(), request.header.verb) {
+        ("/node/set-state", HttpVerb::POST) => set_state_route(request),
+        (r, HttpVerb::GET) if r.starts_with("/node/get-state") => get_state_route(request, name_resolver),
+        (_, _) => not_found_route(request)
+    }
 }
 
-
-fn router(request: HttpRequest) -> (HttpResponse, Option<Event>) {
-    // TODO move.
-    let client = HttpClient::create("192.168.0.226:80".to_string());
-    
-    let set_state_route = String::from("/set-state");
-    let get_state_route = String::from("/get-state/test");
-    
-    match (request.header.route, request.header.verb) {
-        (set_state_route, HttpVerb::POST) => {
-            match request.body {
-                None => {
-                    let body = Some("Missing request body.".as_bytes().to_vec());
-                    (HttpResponse::create(HttpStatus::BadRequest, "text/plain".to_string(), HashMap::new(), body), None)
+fn set_state_route(request: HttpRequest) -> RouteResult {
+    match request.body {
+        None => {
+            let body = Some("Missing request body.".as_bytes().to_vec());
+            RouteResult {
+                response: HttpResponse::create(HttpStatus::BadRequest, "text/plain".to_string(), HashMap::new(), body),
+                events: vec![],
+                commands: vec![]
+            }
+        }
+        Some(request_body) => {
+            match UpdateNodeStateRequest::from_bytes(request_body) {
+                Ok(parsed_request) => {
+                    let body = Some("Update state action queued.".as_bytes().to_vec());
+                    RouteResult {
+                        response: HttpResponse::create(HttpStatus::Ok, "text/plain".to_string(), HashMap::new(), body),
+                        events: vec![],
+                        commands: vec![ Command { id: Uuid::new_v4(), command_type: CommandType::ChangeNodeState(ChangeNodeStateCommand { node: parsed_request.node, new_state: parsed_request.new_state }) } ]
+                    }
                 }
-                Some(request_body) => {
-                    match UpdateNodeStateRequest::from_bytes(request_body) {
-                        Ok(parsed_request) => {
-                            match set_state(client, parsed_request) {
-                                Ok(response) => {
-                                    match response.to_bytes() {
-                                        Ok(body) => {
-                                            let event = Some(Event { id: Uuid::new_v4(), event_type: EventType::Test });
-                                            (HttpResponse::create(HttpStatus::Ok, "application/json".to_string(), HashMap::new(), Some(body)), event)
-                                        }
-                                        Err(_) => {
-                                            let body = Some("Could not serialize result.".as_bytes().to_vec());
-                                            (HttpResponse::create(HttpStatus::InternalError, "text/plain".to_string(), HashMap::new(), body), None)
-                                        }
-                                    }
-                                }
-                                Err(_) => {
-                                    let body = Some("Could not set state.".as_bytes().to_vec());
-                                    (HttpResponse::create(HttpStatus::InternalError, "text/plain".to_string(), HashMap::new(), body), None)
-                                }
-                            }
-                            
-                        }
-                        Err(_) => {
-                            let body = Some("Invalid request.".as_bytes().to_vec());
-                            (HttpResponse::create(HttpStatus::BadRequest, "text/plain".to_string(), HashMap::new(), body), None)
-                        }
+                Err(_) => {
+                    let body = Some("Invalid request.".as_bytes().to_vec());
+                    RouteResult {
+                        response: HttpResponse::create(HttpStatus::BadRequest, "text/plain".to_string(), HashMap::new(), body),
+                        events: vec![],
+                        commands: vec![]
                     }
                 }
             }
-            //(HttpResponse::create(HttpStatus::Ok, "text/plain".to_string(), HashMap::new(), body), None)
-        },
-        (get_state_route, HttpVerb::GET) => {
-            match get_state(client) {
-                Ok(state) => {
-                    //let body
-                    let response =
-                    match state.to_bytes() {
-                        Ok(body) => {
-                            HttpResponse::create(HttpStatus::Ok, "application/json".to_string(), HashMap::new(), Some(body))
-                        }
-                        Err(_) => {
-                            let body = Some("Could not serialize result.".as_bytes().to_vec());
-                            HttpResponse::create(HttpStatus::InternalError, "text/plain".to_string(), HashMap::new(), body)
-                        }
-                    };
-                    (response, None)
-                }
-                Err(e) => {
-                    println!("{}", e);
-                    let body = Some("Could not get state.".as_bytes().to_vec());
-                    (HttpResponse::create(HttpStatus::InternalError, "text/plain".to_string(), HashMap::new(), body), None)
-                }
-            }
-        },
-        (_, _) => {
-            let body = Some("Not found".as_bytes().to_vec());
-            (HttpResponse::create(HttpStatus::NotFound, "text/plain".to_string(), HashMap::new(), body), None)
         }
     }
 }
 
+fn get_state_route(request: HttpRequest, name_resolver: Sender<ResolverMessage>) -> RouteResult {
+    let name = request.header.route.split('/').last().unwrap().to_string();
+    
+    let (rc, rx) = channel();
+    name_resolver.send(ResolverMessage::GetAddress(NameRequest { name, reply_channel: rc })).unwrap();
 
+    match rx.recv().unwrap() {
+        None => {
+
+            let body = Some("Node not found.".as_bytes().to_vec());
+            
+            RouteResult {
+                response: HttpResponse::create(HttpStatus::NotFound, "text/plain".to_string(), HashMap::new(), body),
+                events: vec![],
+                commands: vec![]
+            }
+        }
+        Some(addr) => {
+            let client = HttpClient::create(addr);
+
+            let response =
+                match get_state(client) {
+                    Ok(state) => {
+                        //let body
+                        let response =
+                            match state.to_bytes() {
+                                Ok(body) => {
+                                    HttpResponse::create(HttpStatus::Ok, "application/json".to_string(), HashMap::new(), Some(body))
+                                }
+                                Err(_) => {
+                                    let body = Some("Could not serialize result.".as_bytes().to_vec());
+                                    HttpResponse::create(HttpStatus::InternalError, "text/plain".to_string(), HashMap::new(), body)
+                                }
+                            };
+                        response
+                    }
+                    Err(e) => {
+                        let body = Some("Could not get state.".as_bytes().to_vec());
+                        HttpResponse::create(HttpStatus::InternalError, "text/plain".to_string(), HashMap::new(), body)
+                    }
+                };
+
+            RouteResult {
+                response,
+                events: vec![],
+                commands: vec![]
+            }
+        }
+    }
+}
+ 
+fn not_found_route(request: HttpRequest) -> RouteResult {
+    let body = Some("Not found".as_bytes().to_vec());
+    RouteResult {
+        response: HttpResponse::create(HttpStatus::NotFound, "text/plain".to_string(), HashMap::new(), body),
+        events: vec![],
+        commands: vec![]
+    }
+}
+
+/*
 fn set_state(mut client: HttpClient, request: UpdateNodeStateRequest) -> Result<UpdateNodeStateResponse, &'static str> {
     let response = client.get(format!("/set-state/{}", request.new_state), "text/plain".to_string(), HashMap::new())?;
     match response.body {
@@ -285,17 +339,15 @@ fn set_state(mut client: HttpClient, request: UpdateNodeStateRequest) -> Result<
         }
     }
 }
-
+*/
 
 fn get_state(mut client: HttpClient) -> Result<GetNodeStateResponse, &'static str> {
     let response = client.get("/get-state".to_string(), "text/plain".to_string(), HashMap::new())?;
     match response.body {
         None => {
-            println!("Error - No response body returned");
             Err("No response body returned")
         }
         Some(body) => {
-            println!("{}", std::str::from_utf8(&body).unwrap());
             match GetNodeStateResponse::from_bytes(body) {
                 Ok(response) => Ok(response),
                 Err(_) => Err("Unable to parse response")
@@ -303,14 +355,3 @@ fn get_state(mut client: HttpClient) -> Result<GetNodeStateResponse, &'static st
         }
     }
 }
-
-// TODO remove this - test code
-fn fetch() -> Result<String, &'static str> {
-    let mut client = HttpClient::create("192.168.0.226:80".to_string());
-    let response = client.get("/".to_string(), "text/plain".to_string(), HashMap::new())?;
-    match response.body {
-        None => Ok("".to_string()),
-        Some(raw) => Ok(String::from_utf8(raw).unwrap())
-    }
-}
- 
